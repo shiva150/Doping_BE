@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
     const result = populated.map((entry, index) => ({
       rank: index + 1,
       userId: entry._id,
+      
       username: entry._id?.username || 'Unknown User',
       totalScore: entry.totalScore,
       quizzesTaken: entry.quizzesTaken,
