@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -29,15 +30,31 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    res.status(201).json({
-      message: 'User registered successfully',
+    const payload = {
       user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        score: user.score
+        id: user.id
       }
-    });
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '5 days' },
+      (err, token) => {
+        if (err) throw err;
+        res.status(201).json({
+          message: 'User registered successfully',
+          token,
+          user: {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            score: user.score
+          }
+        });
+      }
+    );
+
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -57,14 +74,30 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    res.json({
+    const payload = {
       user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        score: user.score
+        id: user.id
       }
-    });
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '5 days' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({
+          token,
+          user: {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            score: user.score
+          }
+        });
+      }
+    );
+
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error' });
